@@ -204,61 +204,58 @@ $app->get('/dostawcy/:id', function($idDostawcy) {
 		echoRespnse(404, $response);
 	}
 });
-	/**
-	 * Adding zamowienie_produktow
-	 * method POST
-	 * url /zamowienia
-	 * params data, idPracownicy, listaPotraw 
-	 */
-	$app->post('/zamowienia_produktow', function() use ($app) {
-		// check for required params
-		verifyRequiredParams(array('data','idDostawcy','listaProduktow'));
-	
-		$response = array();
-	
-		$data = $app->request->post('data');
-		$idDostawcy = $app->request->post('idDostawcy');
-		$list = $app->request->post('listaProduktow');
-		$listaProduktow = json_decode($list);
-	
-	
-		$db = new DbHandler();
-	
-	
-		$idZamowienia = $db->createNewZamowienieProduktow($idDostawcy, $data);
-	
-		if ($idZamowienia>0) {
-	
-			foreach ($listaProduktow as $produkt) {
-				$tmp = array();
-				$tmp["idProdukty"] = $produkt->idProdukty;
-				$tmp["ilosc"] = $produkt->ilosc;
-				$added = $db->addProduktyDoZamowienia($idZamowienia, $tmp["idProdukty"], $tmp["ilosc"]);
-				if($added){
-					$response["error"] = false;
-					$response["message"] = "Zamowienie created successfully ";
-				}
-				else{
-					$response["error"] = false;
-					$response["message"] = "Failed to add potrawy do zamowienia $idZamowienia";
-				}
-			}
-	
-	
-	
-		} else {
-			$response["error"] = true;
-			$response["message"] = "Failed to create zamowienie. Please try again";
-		}
-		echoRespnse(201, $response);
-	});
+ /**
+ * Adding zamowienie_produktow
+ * method POST
+ * url /zamowienia
+ * params data, idPracownicy, listaPotraw np. [{"idProdukty": 1,"ilosc": 2},{"idProdukty": 2,"ilosc": 3}]
+ */
+$app->post('/zamowienia_produktow', function() use ($app) {
+	// check for required params
+	verifyRequiredParams(array('data','idDostawcy','listaProduktow'));
 
-	/**
-	 * Adding zamowienie
-	 * method POST
-	 * url /zamowienia
-	 * params data, idPracownicy, listaPotraw czyli np [{idPotrawy}]
-	 */
+	$response = array();
+
+	$data = $app->request->post('data');
+	$idDostawcy = $app->request->post('idDostawcy');
+	$list = $app->request->post('listaProduktow');
+	$listaProduktow = json_decode($list);
+
+
+	$db = new DbHandler();
+
+
+	$idZamowienia = $db->createNewZamowienieProduktow($idDostawcy, $data);
+
+	if ($idZamowienia>0) {
+
+		foreach ($listaProduktow as $produkt) {
+			$tmp = array();
+			$tmp["idProdukty"] = $produkt->idProdukty;
+			$tmp["ilosc"] = $produkt->ilosc;
+			$added = $db->addProduktyDoZamowienia($idZamowienia, $tmp["idProdukty"], $tmp["ilosc"]);
+			if($added){
+				$response["error"] = false;
+				$response["message"] = "Zamowienie created successfully ";
+			}
+			else{
+				$response["error"] = false;
+				$response["message"] = "Failed to add potrawy do zamowienia $idZamowienia";
+			}
+		}
+	} else {
+		$response["error"] = true;
+		$response["message"] = "Failed to create zamowienie. Please try again";
+	}
+	echoRespnse(201, $response);
+});
+
+/**
+ * Adding zamowienie_posilkow
+ * method POST
+ * url /zamowienia
+ * params data, idPracownicy, listaPotraw czyli np [{"idPotrawy": 1,"ilosc": 2},{"idPotrawy": 2,"ilosc": 3}]
+ */
 $app->post('/zamowienia', function() use ($app) {
 	// check for required params
 	verifyRequiredParams(array('data','idPracownicy','listaPotraw'));
@@ -289,18 +286,20 @@ $app->post('/zamowienia', function() use ($app) {
 			}
 			else{
 				$response["error"] = false;
-				$response["message"] = "Failed to add potrawy do zamowienia $idZamowienia";
+				$response["message"] = "Failed to add potrawy do zamowienia";
 			}
 		}
-		
-		
-		
 	} else {
 		$response["error"] = true;
 		$response["message"] = "Failed to create zamowienie. Please try again";
 	}
 	echoRespnse(201, $response);
-});		
+});	
+/**
+ * Listing single zamowienie
+ * method GET
+ * url /zamowienia/:id
+ */
 $app->get('/zamowienia/:id', function($idZamowienie) {
 
 	$response = array();
@@ -327,6 +326,11 @@ $app->get('/zamowienia/:id', function($idZamowienie) {
 
 	echoRespnse(200, $response);
 });
+/**
+ * Listing zamowienia
+ * method GET
+ * url /zamowienia
+ */
 $app->get('/zamowienia', function() {
 
 	$response = array();
@@ -355,25 +359,25 @@ $app->get('/zamowienia', function() {
 	echoRespnse(200, $response);
 });
 /**
- * Updating existing task
+ * Updating status of existing zamowienie
  * method PUT
- * params task, status
- * url - /tasks/:id
+ * params bool status (1-aktywne,0-zakonczone)
+ * url - /zamowienia/:id
  */
 $app->put('/zamowienia/:id', function($idZamowienia) use($app) {
 
-
+	$status = $app->request->put('status');
 	$db = new DbHandler();
 	$response = array();
 
-	// updating task
-	$result = $db->updateZamowienie($idZamowienia);
+
+	$result = $db->updateZamowienie($idZamowienia,$status);
 	if ($result) {
-		// task updated successfully
+
 		$response["error"] = false;
 		$response["message"] = "Status updated successfully";
 	} else {
-		// task failed to update
+
 		$response["error"] = true;
 		$response["message"] = "status failed to update. Please try again!";
 	}

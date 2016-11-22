@@ -1,0 +1,64 @@
+/**
+ * Listing potrawy
+ * method GET
+ * url /potrawy
+ */
+ /**
+ * Listing produkty
+ * method GET
+ * url /produkty
+ */
+/**
+ * Updating produkty
+ * method PUT
+ * url /produkty/:id
+ * params - ilosc
+ */
+ /**
+ * Listing pracownicy
+ * method GET
+ * url /pracownicy
+ */
+ /**
+ * Listing single pracownik
+ * method GET
+ * url /pracownicy/:id
+ */
+ /**
+ * Listing dostawcy
+ * method GET
+ * url /dostawcy
+ */
+ /**
+ * Listing single dostawca
+ * method GET
+ * url /dostawcy/:id
+ */
+ /**
+ * Adding zamowienie_produktow
+ * method POST
+ * url /zamowienia
+ * params data, idPracownicy, listaPotraw np [{"idProdukty": 1,"ilosc": 2},{"idProdukty": 2,"ilosc": 3}]
+ */
+ /**
+ * Adding zamowienie_posilkow
+ * method POST
+ * url /zamowienia
+ * params data, idPracownicy, listaPotraw czyli np [{"idPotrawy": 1,"ilosc": 2},{"idPotrawy": 2,"ilosc": 3}]
+ */
+/**
+ * Listing single zamowienie
+ * method GET
+ * url /zamowienia/:id
+ */
+ /**
+ * Listing zamowienia
+ * method GET
+ * url /zamowienia
+ */
+ /**
+ * Updating status of existing zamowienie
+ * method PUT
+ * params bool status (1-aktywne,0-zakonczone)
+ * url - /zamowienia/:id
+ */

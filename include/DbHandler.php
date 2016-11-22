@@ -217,9 +217,9 @@ class DbHandler {
      * Updating zamowienie status
      * @param idZamowienie
      */
-    public function updateZamowienie($idZamowienie) {
-    	$stmt = $this->conn->prepare("UPDATE zamowienia_potraw set status = 0 WHERE idZamowienia = ?");
-    	$stmt->bind_param("i", $idZamowienie);
+    public function updateZamowienie($idZamowienie,$status) {
+    	$stmt = $this->conn->prepare("UPDATE zamowienia_potraw set status = ? WHERE idZamowienia = ?");
+    	$stmt->bind_param("ii", $status, $idZamowienie);
     	$stmt->execute();
     	$num_affected_rows = $stmt->affected_rows;
     	$stmt->close();
