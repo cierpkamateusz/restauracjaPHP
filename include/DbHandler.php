@@ -11,6 +11,176 @@ class DbHandler {
         $db = new DbConnect();
         $this->conn = $db->connect();
     }
+    
+    /**
+     * Creating new user
+     * @param String $imie User full name
+     * @param String $email User login email id
+     * @param String $haslo User login password
+     */
+    public function createUser($name, $email, $password) {
+    	require_once 'PassHash.php';
+    	$response = array();
+    
+    	// First check if user already existed in db
+    	if (!$this->isUserExists($email)) {
+    		// Generating password hash
+    		$encryptedPassword = PassHash::hash($password);
+    
+    		// Generating API key
+    		$api_key = $this->generateApiKey();
+    
+    		// insert query
+    		$stmt = $this->conn->prepare("INSERT INTO uzytkownicy(imie, email, encryptedPassword, apiKey) values(?, ?, ?, ?)");
+    		$stmt->bind_param("ssss", $name, $email, $encryptedPassword,$api_key);
+    
+    		$result = $stmt->execute();
+    
+    		$stmt->close();
+    
+    		// Check for successful insertion
+    		if ($result) {
+    			// User successfully inserted
+    			return USER_CREATED_SUCCESSFULLY;
+    		} else {
+    			// Failed to create user
+    			return USER_CREATE_FAILED;
+    		}
+    	} else {
+    		// User with same email already existed in the db
+    		return USER_ALREADY_EXISTED;
+    	}
+    
+    	return $response;
+    }
+    
+    /**
+     * Checking user login
+     * @param String $email User login email id
+     * @param String $password User login password
+     * @return boolean User login status success/fail
+     */
+    public function checkLogin($email, $password) {
+    	// fetching user by email
+    	$stmt = $this->conn->prepare("SELECT encryptedPassword FROM uzytkownicy WHERE email = ?");
+    
+    	$stmt->bind_param("s", $email);
+    
+    	$stmt->execute();
+    
+    	$stmt->bind_result($encryptedPassword);
+    
+    	$stmt->store_result();
+    
+    	if ($stmt->num_rows() > 0) {
+    		// Found user with the email
+    		// Now verify the password
+    
+    		$stmt->fetch();
+    
+    		$stmt->close();
+    
+    		if (PassHash::check_password($encryptedPassword, $password)) {
+    			// User password is correct
+    			return TRUE;
+    		} else {
+    			// user password is incorrect
+    			return FALSE;
+    		}
+    	} else {
+    		$stmt->close();
+    
+    		// user not existed with the email
+    		return FALSE;
+    	}
+    }
+    
+    /**
+     * Checking for duplicate user by email address
+     * @param String $email email to check in db
+     * @return boolean
+     */
+    private function isUserExists($email) {
+    	$stmt = $this->conn->prepare("SELECT idUzytkownicy from uzytkownicy WHERE email = ?");
+    	$stmt->bind_param("s", $email);
+    	$stmt->execute();
+    	$stmt->store_result();
+    	$num_rows = $stmt->num_rows;
+    	$stmt->close();
+    	return $num_rows > 0;
+    }
+    
+    /**
+     * Fetching user by email
+     * @param String $email User email id
+     */
+    public function getUserByEmail($email) {
+    	$stmt = $this->conn->prepare("SELECT idUzytkownicy, imie, email, apiKey FROM uzytkownicy WHERE email = ?");
+    	$stmt->bind_param("s", $email);
+    	if ($stmt->execute()) {
+    		$user = $stmt->get_result()->fetch_assoc();
+    		$stmt->close();
+    		return $user;
+    	} else {
+    		return NULL;
+    	}
+    }
+    
+    /**
+     * Fetching user api key
+     * @param String $user_id user id primary key in user table
+     */
+    public function getApiKeyById($user_id) {
+    	$stmt = $this->conn->prepare("SELECT apiKey FROM uzytkownicy WHERE id = ?");
+    	$stmt->bind_param("i", $user_id);
+    	if ($stmt->execute()) {
+    		$api_key = $stmt->get_result()->fetch_assoc();
+    		$stmt->close();
+    		return $api_key;
+    	} else {
+    		return NULL;
+    	}
+    }
+    
+    /**
+     * Fetching user id by api key
+     * @param String $api_key user api key
+     */
+    public function getUserId($apiKey) {
+    	$stmt = $this->conn->prepare("SELECT idUzytkownicy FROM uzytkownicy WHERE apiKey = ?");
+    	$stmt->bind_param("s", $apiKey);
+    	if ($stmt->execute()) {
+    		$user_id = $stmt->get_result()->fetch_assoc();
+    		$stmt->close();
+    		return $user_id;
+    	} else {
+    		return NULL;
+    	}
+    }
+    
+    /**
+     * Validating user api key
+     * If the api key is there in db, it is a valid key
+     * @param String $apiKey user api key
+     * @return boolean
+     */
+    public function isValidApiKey($apiKey) {
+    	$stmt = $this->conn->prepare("SELECT idUzytkownicy from uzytkownicy WHERE apiKey = ?");
+    	$stmt->bind_param("s", $apiKey);
+    	$stmt->execute();
+    	$stmt->store_result();
+    	$num_rows = $stmt->num_rows;
+    	$stmt->close();
+    	return $num_rows > 0;
+    }
+    
+    /**
+     * Generating random Unique MD5 String for user Api key
+     */
+    private function generateApiKey() {
+    	return md5(uniqid(rand(), true));
+    }
+    
     /**
      * Fetching potrawy
      */

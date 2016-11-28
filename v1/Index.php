@@ -1,19 +1,149 @@
 <?php
  
 require_once '../include/DbHandler.php';
-
+require_once '../include/PassHash.php';
 require '.././libs/Slim/Slim.php';
  
 \Slim\Slim::registerAutoloader();
  
 $app = new \Slim\Slim();
+// User id from db - Global Variable
+$user_id = NULL;
+
+/**
+ * User Registration
+ * url - /register
+ * method - POST
+ * params - name, email, password
+ */
+$app->post('/register', function() use ($app) {
+	// check for required params
+	verifyRequiredParams(array('imie', 'email', 'haslo'));
+
+	$response = array();
+
+	// reading post params
+	$name = $app->request->post('imie');
+	$email = $app->request->post('email');
+	$password = $app->request->post('haslo');
+// 	$name = substr($name_str, 1, -1);
+// 	$email = substr($email_str, 1, -1);
+// 	$password = substr($password_str, 1, -1);
+	// validating email address
+	validateEmail($email);
+
+	$db = new DbHandler();
+	$res = $db->createUser($name, $email, $password);
+
+	if ($res == USER_CREATED_SUCCESSFULLY) {
+		$response["error"] = false;
+		$response["message"] = "You are successfully registered";
+		echoRespnse(201, $response);
+	} else if ($res == USER_CREATE_FAILED) {
+		$response["error"] = true;
+		$response["message"] = "Oops! An error occurred while registereing";
+		echoRespnse(200, $response);
+	} else if ($res == USER_ALREADY_EXISTED) {
+		$response["error"] = true;
+		$response["message"] = "Sorry, this email already existed";
+		echoRespnse(200, $response);
+	}
+});
+
+	/**
+	 * User Login
+	 * url - /login
+	 * method - POST
+	 * params - email, password
+	 */
+	$app->post('/login', function() use ($app) {
+		// check for required params
+
+		verifyRequiredParams(array('email','haslo'));
+
+		// reading post params
+		$email = $app->request()->post('email');
+		$password = $app->request()->post('haslo');
+// 		$email = substr($email_str, 1, -1);
+// 		$password = substr($password_str, 1, -1);
+		$response = array();
+
+		$db = new DbHandler();
+		// check for correct email and password
+		if ($db->checkLogin($email, $password)) {
+			// get the user by email
+			$user = $db->getUserByEmail($email);
+
+			if ($user != NULL) {
+				// 			$response['error'] = false;
+				// 			$response['message'] = "An error not occurred. ";
+				$response['idUzytkownicy'] = $user['idUzytkownicy'];
+				$response["error"] = false;
+				$response['imie'] = $user['imie'];
+				$response['email'] = $user['email'];
+				$response['apiKey'] = $user['apiKey'];
+				
+					
+			} else {
+				// unknown error occurred
+				$response['error'] = true;
+				$response['message'] = "An error occurred. Please try again";
+			}
+		} else {
+			// user credentials are wrong
+
+			$response['error'] = true;
+			$response['message'] = "Login failed. Incorrect credentials $email $password";
+		}
+
+		echoRespnse(200, $response);
+	});
+
+		/**
+		 * Adding Middle Layer to authenticate every request
+		 * Checking if the request has valid api key in the 'Authorization' header
+		 */
+		function authenticate(\Slim\Route $route) {
+			// Getting request headers
+			$headers = apache_request_headers();
+			$response = array();
+			$app = \Slim\Slim::getInstance();
+
+			// Verifying Authorization Header
+			if (isset($headers['authorization'])) {
+				$db = new DbHandler();
+
+				// get the api key
+				$api_key = $headers['authorization'];
+				// validating api key
+				if (!$db->isValidApiKey($api_key)) {
+					// api key is not present in users table
+					$response["error"] = true;
+					$response["message"] = "Access Denied. Invalid Api key";
+					echoRespnse(401, $response);
+					$app->stop();
+				} else {
+					global $user_id;
+					// get user primary key id
+					$user = $db->getUserId($api_key);
+					if ($user != NULL)
+						$user_id = $user["idUser"];
+				}
+			} else {
+				// api key is missing in header
+				$response["error"] = true;
+				$response["message"] = "Api key is misssing";
+				echoRespnse(400, $response);
+				$app->stop();
+			}
+		}
 
 /**
  * Listing potrawy
  * method GET
  * url /potrawy
  */
-$app->get('/potrawy', function() {
+$app->get('/potrawy', 'authenticate', function() {
 
 	$response = array();
 	$db = new DbHandler();
@@ -40,7 +170,7 @@ $app->get('/potrawy', function() {
  * method GET
  * url /produkty
  */
-$app->get('/produkty', function() {
+$app->get('/produkty','authenticate', function() {
 
 	$response = array();
 	$db = new DbHandler();
@@ -68,7 +198,7 @@ $app->get('/produkty', function() {
 	 * url /produkty/:id
 	 * params - ilosc
 	 */
-	$app->put('/produkty/:id', function($idProdukt) use ($app) {
+	$app->put('/produkty/:id', 'authenticate',function($idProdukt) use ($app) {
 		verifyRequiredParams(array('ilosc'));
 		$ilosc = $app->request->post('ilosc');
 		
@@ -94,7 +224,7 @@ $app->get('/produkty', function() {
  * method GET
  * url /pracownicy
  */
-$app->get('/pracownicy', function() {
+$app->get('/pracownicy', 'authenticate',function() {
 	
 	$response = array();
 	$db = new DbHandler();
@@ -124,7 +254,7 @@ $app->get('/pracownicy', function() {
  * method GET
  * url /pracownicy/:id
  */
-$app->get('/pracownicy/:id', function($idPracownicy) {
+$app->get('/pracownicy/:id','authenticate', function($idPracownicy) {
 
 	$response = array();
 	$db = new DbHandler();
@@ -152,7 +282,7 @@ $app->get('/pracownicy/:id', function($idPracownicy) {
  * method GET
  * url /dostawcy
  */
-$app->get('/dostawcy', function() {
+$app->get('/dostawcy','authenticate', function() {
 
 	$response = array();
 	$db = new DbHandler();
@@ -182,7 +312,7 @@ $app->get('/dostawcy', function() {
  * method GET
  * url /dostawcy/:id
  */
-$app->get('/dostawcy/:id', function($idDostawcy) {
+$app->get('/dostawcy/:id','authenticate', function($idDostawcy) {
 
 	$response = array();
 	$db = new DbHandler();
@@ -211,7 +341,7 @@ $app->get('/dostawcy/:id', function($idDostawcy) {
  * url /zamowienia
  * params data, idPracownicy, listaPotraw np. [{"idProdukty": 1,"ilosc": 2},{"idProdukty": 2,"ilosc": 3}]
  */
-$app->post('/zamowienia_produktow', function() use ($app) {
+$app->post('/zamowienia_produktow','authenticate', function() use ($app) {
 	// check for required params
 	verifyRequiredParams(array('data','idDostawcy','listaProduktow'));
 
@@ -257,7 +387,7 @@ $app->post('/zamowienia_produktow', function() use ($app) {
  * url /zamowienia
  * params data, idPracownicy, listaPotraw czyli np [{"idPotrawy": 1,"ilosc": 2},{"idPotrawy": 2,"ilosc": 3}]
  */
-$app->post('/zamowienia', function() use ($app) {
+$app->post('/zamowienia','authenticate', function() use ($app) {
 	// check for required params
 	verifyRequiredParams(array('data','idPracownicy','listaPotraw'));
 
@@ -301,7 +431,7 @@ $app->post('/zamowienia', function() use ($app) {
  * method GET
  * url /zamowienia/:id
  */
-$app->get('/zamowienia/:id', function($idZamowienie) {
+$app->get('/zamowienia/:id','authenticate', function($idZamowienie) {
 
 	$response = array();
 	$db = new DbHandler();
@@ -332,7 +462,7 @@ $app->get('/zamowienia/:id', function($idZamowienie) {
  * method GET
  * url /zamowienia
  */
-$app->get('/zamowienia', function() {
+$app->get('/zamowienia','authenticate', function() {
 
 	$response = array();
 	$db = new DbHandler();
@@ -365,7 +495,7 @@ $app->get('/zamowienia', function() {
  * params bool status (1-aktywne,0-zakonczone)
  * url - /zamowienia/:id
  */
-$app->put('/zamowienia/:id', function($idZamowienia) use($app) {
+$app->put('/zamowienia/:id','authenticate', function($idZamowienia) use($app) {
 
 	$status = $app->request->put('status');
 	$db = new DbHandler();
@@ -415,7 +545,18 @@ function verifyRequiredParams($required_fields) {
         $app->stop();
     }
 }
- 
+/**
+ * Validating email address
+ */
+function validateEmail($email) {
+	$app = \Slim\Slim::getInstance();
+	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+		$response["error"] = true;
+		$response["message"] = 'Email address is not valid';
+		echoRespnse(400, $response);
+		$app->stop();
+	}
+}
 
 function echoRespnse($status_code, $response) {
     $app = \Slim\Slim::getInstance();
