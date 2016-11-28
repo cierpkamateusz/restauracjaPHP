@@ -127,7 +127,7 @@ $app->post('/register', function() use ($app) {
 					// get user primary key id
 					$user = $db->getUserId($api_key);
 					if ($user != NULL)
-						$user_id = $user["idUser"];
+						$user_id = $user["idUzytkownicy"];
 				}
 			} else {
 				// api key is missing in header
