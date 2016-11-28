@@ -1065,6 +1065,10 @@ class Slim
     {
         $this->response->headers->set('Content-Type', $type);
     }
+    public function accessControlAllowOrigin($type)
+    {
+    	$this->response->headers->set('Access-Control-Allow-Origin', $type);
+    }
 
     /**
      * Set the HTTP response status code

@@ -7,6 +7,7 @@ require '.././libs/Slim/Slim.php';
 \Slim\Slim::registerAutoloader();
  
 $app = new \Slim\Slim();
+
 /**
  * Listing potrawy
  * method GET
@@ -423,6 +424,7 @@ function echoRespnse($status_code, $response) {
  
     // setting response content type to json
     $app->contentType('application/json');
+    $app->accessControlAllowOrigin('*');
  
     echo json_encode($response);
 }
