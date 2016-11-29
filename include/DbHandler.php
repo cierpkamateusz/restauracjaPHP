@@ -348,7 +348,7 @@ class DbHandler {
      */
     public function getZamowienie($idZamowienia) {
     	$stmt = $this->conn->prepare("
-    			select zp.idZamowienia, zp.data, p.nazwa, pwz.ilosc, p.cena, pr.imie, pr.nazwisko, zp.status
+    			select zp.idZamowienia, zp.data, p.nazwa, pwz.ilosc, p.cena, pr.imie, pr.nazwisko, if(zp.status=1,'gotowe','niegotowe') as status
 				from zamowienia_potraw zp
 				join pracownicy pr
 				on zp.idPracownicy=pr.idPracownicy
@@ -368,7 +368,7 @@ class DbHandler {
      */
     public function getZamowienia() {
     	$stmt = $this->conn->prepare("
-    			select zp.idZamowienia, zp.data, p.nazwa, pwz.ilosc, p.cena, pr.imie, pr.nazwisko, zp.status
+    			select zp.idZamowienia, zp.data, p.nazwa, pwz.ilosc, p.cena, pr.imie, pr.nazwisko, if(zp.status=1,'gotowe','niegotowe') as status
 				from zamowienia_potraw zp
 				join pracownicy pr
 				on zp.idPracownicy=pr.idPracownicy
