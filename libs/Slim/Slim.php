@@ -1069,7 +1069,14 @@ class Slim
     {
     	$this->response->headers->set('Access-Control-Allow-Origin', $type);
     }
-
+    public function accessControlAllowMethods($type)
+    {
+    	$this->response->headers->set('Access-Control-Allow-Methods', $type);
+    }
+    public function accessControlAllowHeaders($type)
+    {
+    	$this->response->headers->set('Access-Control-Allow-Headers', $type);
+    }
     /**
      * Set the HTTP response status code
      * @param  int      $code     The HTTP response status code

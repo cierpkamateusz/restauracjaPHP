@@ -566,7 +566,8 @@ function echoRespnse($status_code, $response) {
     // setting response content type to json
     $app->contentType('application/json');
     $app->accessControlAllowOrigin('*');
- 
+ 	$app->accessControlAllowMethods('GET,PUT,POST,DELETE');
+ 	$app->accessControlAllowHeaders('Origin, Authorization, Username, Content-Type, Accept');
     echo json_encode($response);
 }
  
