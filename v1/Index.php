@@ -7,6 +7,9 @@ require '.././libs/Slim/Slim.php';
 \Slim\Slim::registerAutoloader();
  
 $app = new \Slim\Slim();
+$app->accessControlAllowOrigin('*');
+$app->accessControlAllowMethods('GET,PUT,POST,DELETE');
+$app->accessControlAllowHeaders('Origin, Authorization, Username, Content-Type, Accept');
 // User id from db - Global Variable
 $user_id = NULL;
 
@@ -565,9 +568,7 @@ function echoRespnse($status_code, $response) {
  
     // setting response content type to json
     $app->contentType('application/json');
-    $app->accessControlAllowOrigin('*');
- 	$app->accessControlAllowMethods('GET,PUT,POST,DELETE');
- 	$app->accessControlAllowHeaders('Origin, Authorization, Username, Content-Type, Accept');
+    
     echo json_encode($response);
 }
  
