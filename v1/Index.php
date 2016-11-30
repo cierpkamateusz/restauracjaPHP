@@ -3,13 +3,13 @@
 require_once '../include/DbHandler.php';
 require_once '../include/PassHash.php';
 require '.././libs/Slim/Slim.php';
- 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization");
 \Slim\Slim::registerAutoloader();
  
 $app = new \Slim\Slim();
-$app->accessControlAllowOrigin('*');
-$app->accessControlAllowMethods('GET, PUT, POST, DELETE, OPTION');
-$app->accessControlAllowHeaders('Origin, Authorization, Username, Content-Type, Accept, X-Requested-With');
+
 // User id from db - Global Variable
 $user_id = NULL;
 
