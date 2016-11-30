@@ -8,8 +8,8 @@ require '.././libs/Slim/Slim.php';
  
 $app = new \Slim\Slim();
 $app->accessControlAllowOrigin('*');
-$app->accessControlAllowMethods('GET,PUT,POST,DELETE');
-$app->accessControlAllowHeaders('Origin, Authorization, Username, Content-Type, Accept');
+$app->accessControlAllowMethods('GET, PUT, POST, DELETE, OPTION');
+$app->accessControlAllowHeaders('Origin, Authorization, Username, Content-Type, Accept, X-Requested-With');
 // User id from db - Global Variable
 $user_id = NULL;
 
