@@ -1,14 +1,16 @@
 <?php
- 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Credentials: true");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Origin, Content-Type, Authorization");
 require_once '../include/DbHandler.php';
 require_once '../include/PassHash.php';
 require '.././libs/Slim/Slim.php';
-header("Access-Control-Allow-Origin: *");
-header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Origin, Content-Type, Accept, Authorization");
+
 \Slim\Slim::registerAutoloader();
  
 $app = new \Slim\Slim();
+
 
 // User id from db - Global Variable
 $user_id = NULL;
@@ -67,6 +69,7 @@ $app->post('/register', function() use ($app) {
 		// reading post params
 		$email = $app->request()->post('email');
 		$password = $app->request()->post('haslo');
+		
 // 		$email = substr($email_str, 1, -1);
 // 		$password = substr($password_str, 1, -1);
 		$response = array();
@@ -78,6 +81,7 @@ $app->post('/register', function() use ($app) {
 			$user = $db->getUserByEmail($email);
 
 			if ($user != NULL) {
+				echo $email;
 				// 			$response['error'] = false;
 				// 			$response['message'] = "An error not occurred. ";
 				$response['idUzytkownicy'] = $user['idUzytkownicy'];
@@ -273,6 +277,8 @@ $app->get('/pracownicy/:id','authenticate', function($idPracownicy) {
 		$response["numerTelefonu"] = $result["numerTelefonu"];
 		$response["pesel"] = $result["pesel"];
 		$response["stanowisko"] = $result["stanowisko"];
+		$response["zdjecie"] = $result["zdjecie"];
+		$response["opis"] = $result["opis"];
 		echoRespnse(200, $response);
 	} else {
 		$response["error"] = true;

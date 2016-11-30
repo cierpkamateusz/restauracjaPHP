@@ -220,7 +220,7 @@ class DbHandler {
      */
     public function getPracownicy() {
     	$stmt = $this->conn->prepare("
-    			SELECT * FROM pracownicy");
+    			SELECT idPracownicy, imie, nazwisko, numerTelefonu, pesel, stanowisko FROM pracownicy");
     	$stmt->execute();
     	$pracownicy = $stmt->get_result();
     	$stmt->close();
